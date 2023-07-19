@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebGL GPU Info</title>
+</head>
+<body>
+  <!--<h1>User Info</h1>-->
+  <!--<div id="gpu-info-container"></div>-->
+  <script>
+    async function getInfo() {
+      var glParams = {
+        unmaskedVendor: '',
+        unmaskedRenderer: '',
+        error: null
+      };
+      const gl = document.createElement('canvas').getContext('webgl');
+      if (!gl) {
+        glParams.error = "no webgl"
+        return glParams
+      }
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (!debugInfo) {
+        glParams.error = "no WEBGL_debug_renderer_info"
+        return glParams
+      }
+      glParams.unmaskedVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
+      glParams.unmaskedRenderer =gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+      return glParams
+    }
+
+    (async (canvas) => {
+      var params = await getInfo();
+      console.log(params);
+
+      const response = await fetch('/gpu-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params)
+      });
+      const data = await response.json();
+      //const gpuInfoContainer = document.getElementById('gpu-info-container');
+      const gpuInfoHTML = `
+        <p>IP: ${data.ip}</p>
+        <p>User Agent: ${data.userAgent}</p>
+        <p>Unmasked Renderer: ${data.unmaskedRenderer}</p>
+        <p>Unmasked Vendor: ${data.unmaskedVendor}</p>
+      `;
+      //gpuInfoContainer.innerHTML = gpuInfoHTML;
+
+      var canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 150;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'lightblue';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'black';
+      ctx.font = '18px Arial';
+      ctx.fillText('IP: ' + data.ip, 10, 30);
+      ctx.fillText('User Agent: ' + data.userAgent, 10, 60);
+      ctx.fillText('Renderer: ' + data.unmaskedRenderer, 10, 90);
+      ctx.fillText('Vendor: ' + data.unmaskedVendor, 10, 120);
+      var img = new Image();
+      img.src = canvas.toDataURL();
+      document.body.appendChild(img);
+    })();
+  </script>
+</body>
+</html>
