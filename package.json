@@ -4,7 +4,7 @@
   "description": "",
   "author": "",
   "scripts": {
-    "start": "node app.js"
+    "start": "index.js"
   },
   "dependencies": {
     "express": "^4.18.2"
